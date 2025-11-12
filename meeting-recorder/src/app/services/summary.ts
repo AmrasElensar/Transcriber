@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface SummaryConfig {
-  provider: 'openai' | 'anthropic' | 'basic';
+  provider: 'openai' | 'anthropic' | 'ollama' | 'llamacpp' | 'basic';
   apiKey?: string;
+  endpoint?: string;
+  model?: string;
 }
 
 export interface MeetingSummary {
@@ -56,6 +58,12 @@ export class Summary {
           break;
         case 'anthropic':
           summary = await this.generateWithAnthropic(transcript);
+          break;
+        case 'ollama':
+          summary = await this.generateWithOllama(transcript);
+          break;
+        case 'llamacpp':
+          summary = await this.generateWithLlamaCpp(transcript);
           break;
         case 'basic':
         default:
@@ -154,6 +162,84 @@ Transcript: ${transcript}`
 
     const data = await response.json();
     const summaryText = data.content[0].text;
+
+    return this.parseSummaryText(summaryText);
+  }
+
+  private async generateWithOllama(transcript: string): Promise<MeetingSummary> {
+    const endpoint = this.config.endpoint || 'http://localhost:11434';
+    const model = this.config.model || 'llama3.2';
+
+    const prompt = `Please summarize this meeting transcript and provide:
+1. Key Points (main topics discussed)
+2. Action Items (tasks to be done)
+3. Decisions Made
+4. Brief overall summary
+
+Transcript: ${transcript}
+
+Please format your response with clear sections for Key Points, Action Items, and Decisions.`;
+
+    const response = await fetch(`${endpoint}/api/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model,
+        prompt: prompt,
+        stream: false,
+        options: {
+          temperature: 0.5,
+          num_predict: 1024
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const summaryText = data.response;
+
+    return this.parseSummaryText(summaryText);
+  }
+
+  private async generateWithLlamaCpp(transcript: string): Promise<MeetingSummary> {
+    const endpoint = this.config.endpoint || 'http://localhost:8080';
+    const model = this.config.model || 'default';
+
+    const prompt = `Please summarize this meeting transcript and provide:
+1. Key Points (main topics discussed)
+2. Action Items (tasks to be done)
+3. Decisions Made
+4. Brief overall summary
+
+Transcript: ${transcript}
+
+Please format your response with clear sections for Key Points, Action Items, and Decisions.`;
+
+    const response = await fetch(`${endpoint}/completion`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        n_predict: 1024,
+        temperature: 0.5,
+        stop: ['</s>', 'User:', '\n\n\n'],
+        cache_prompt: true
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`llama.cpp API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const summaryText = data.content;
 
     return this.parseSummaryText(summaryText);
   }

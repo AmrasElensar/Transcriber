@@ -13,6 +13,8 @@ A powerful Angular application that records meetings in real-time, provides live
   - Estimated Duration
 - **Multiple AI Providers**: Support for:
   - Basic summarization (no API key required)
+  - Ollama (local LLM)
+  - llama.cpp (local LLM)
   - OpenAI GPT
   - Anthropic Claude
 - **Recording Controls**: Start, Pause, Resume, and Stop functionality
@@ -90,6 +92,60 @@ No configuration needed. Uses client-side text processing to extract:
 - Decisions (sentences with "decided", "agreed", "concluded", etc.)
 - Key points (substantive sentences)
 
+### Ollama (Local LLM) - Recommended for Privacy
+
+Ollama allows you to run powerful language models locally on your machine, ensuring complete privacy.
+
+**Prerequisites:**
+1. Install Ollama from https://ollama.ai
+2. Download a model:
+   ```bash
+   ollama pull llama3.2
+   # or
+   ollama pull mistral
+   # or
+   ollama pull phi3
+   ```
+3. Ensure Ollama is running (it starts automatically after installation)
+
+**Configuration:**
+1. Click the **Settings** icon (⚙️)
+2. Select **"Ollama (Local LLM)"** as the AI Provider
+3. (Optional) Customize the endpoint if not using default: `http://localhost:11434`
+4. (Optional) Specify model name (default: `llama3.2`)
+5. Click **"Save Settings"**
+
+**Benefits:**
+- Complete privacy - no data leaves your machine
+- No API costs
+- Works offline
+- Fast responses with a good GPU
+
+### llama.cpp (Local LLM)
+
+llama.cpp is a C++ implementation for running LLMs locally with minimal dependencies.
+
+**Prerequisites:**
+1. Install llama.cpp from https://github.com/ggerganov/llama.cpp
+2. Download a GGUF model file (e.g., Llama 3.2, Mistral, Phi-3)
+3. Start the server:
+   ```bash
+   ./server -m /path/to/model.gguf --port 8080
+   ```
+
+**Configuration:**
+1. Click the **Settings** icon (⚙️)
+2. Select **"llama.cpp (Local LLM)"** as the AI Provider
+3. (Optional) Customize the endpoint if not using default: `http://localhost:8080`
+4. Click **"Save Settings"**
+
+**Benefits:**
+- Complete privacy - no data leaves your machine
+- No API costs
+- Works offline
+- Minimal resource usage
+- Cross-platform support
+
 ### OpenAI GPT
 
 1. Click the **Settings** icon (⚙️)
@@ -97,7 +153,7 @@ No configuration needed. Uses client-side text processing to extract:
 3. Enter your OpenAI API key
 4. Click **"Save Settings"**
 
-Your API key is stored locally in your browser and never sent to external servers.
+Your API key is stored locally in your browser and never sent to our servers.
 
 ### Anthropic Claude
 
@@ -151,6 +207,8 @@ Manages real-time speech-to-text conversion:
 
 Generates meeting summaries using various methods:
 - Basic: Client-side text processing
+- Ollama: Local LLM integration (llama3.2, mistral, phi3, etc.)
+- llama.cpp: Local LLM integration with GGUF models
 - OpenAI: GPT-4o-mini API integration
 - Anthropic: Claude 3.5 Sonnet API integration
 
@@ -192,15 +250,19 @@ ng generate service service-name
 - **RxJS**: Reactive programming
 - **MediaRecorder API**: Audio recording
 - **Web Speech API**: Speech recognition
-- **OpenAI API**: Optional AI summarization
-- **Anthropic API**: Optional AI summarization
+- **Ollama**: Local LLM inference (optional)
+- **llama.cpp**: Local LLM inference (optional)
+- **OpenAI API**: Cloud AI summarization (optional)
+- **Anthropic API**: Cloud AI summarization (optional)
 
 ## Security & Privacy
 
 - All recordings and transcriptions are processed locally in your browser
-- No audio or transcript data is sent to external servers (except for AI summarization when configured)
+- **Local LLM Options (Ollama/llama.cpp)**: Complete privacy - no data ever leaves your machine
+- **Cloud AI Options (OpenAI/Anthropic)**: Transcripts are sent to external APIs only when generating summaries
 - API keys are stored locally in your browser's memory
 - No data is persisted to disk without explicit user action (download)
+- For maximum privacy, use Basic mode or local LLM providers (Ollama/llama.cpp)
 
 ## Troubleshooting
 
@@ -225,12 +287,29 @@ ng generate service service-name
 3. Check browser console for detailed error messages
 4. Try using Basic mode instead
 
+### Local LLM Not Working (Ollama/llama.cpp)
+
+**Ollama:**
+1. Verify Ollama is running: `ollama list`
+2. Test the API: `curl http://localhost:11434/api/generate -d '{"model":"llama3.2","prompt":"Hello"}'`
+3. Ensure the model is downloaded: `ollama pull llama3.2`
+4. Check CORS settings - you may need to configure Ollama to allow browser requests
+5. Try restarting Ollama: `ollama serve`
+
+**llama.cpp:**
+1. Verify the server is running: `curl http://localhost:8080/health`
+2. Ensure you started the server with the correct model path
+3. Check that the port isn't blocked by a firewall
+4. Start server with CORS enabled if needed: `./server -m model.gguf --host 0.0.0.0 --port 8080`
+
 ## Known Limitations
 
 - Web Speech API requires an active internet connection
 - Transcription accuracy depends on audio quality and accent
 - Recording may pause automatically after extended periods (browser limitation)
 - API costs apply when using OpenAI or Anthropic providers
+- Local LLMs require separate installation and may have higher hardware requirements
+- CORS configuration may be needed for local LLM servers to work with the browser
 
 ## Future Enhancements
 
@@ -257,5 +336,7 @@ For issues and questions, please open an issue on the GitHub repository.
 ## Acknowledgments
 
 - Angular team for the excellent framework
-- OpenAI and Anthropic for AI capabilities
+- Ollama team for making local LLM inference accessible
+- llama.cpp contributors for efficient local LLM implementation
+- OpenAI and Anthropic for cloud AI capabilities
 - Web Speech API for transcription functionality

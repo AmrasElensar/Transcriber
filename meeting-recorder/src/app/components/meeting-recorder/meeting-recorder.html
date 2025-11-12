@@ -81,12 +81,14 @@
         <label for="aiProvider">AI Provider:</label>
         <select id="aiProvider" [(ngModel)]="aiProvider" class="form-control">
           <option value="basic">Basic (No API Required)</option>
+          <option value="ollama">Ollama (Local LLM)</option>
+          <option value="llamacpp">llama.cpp (Local LLM)</option>
           <option value="openai">OpenAI GPT</option>
           <option value="anthropic">Anthropic Claude</option>
         </select>
       </div>
 
-      <div *ngIf="aiProvider !== 'basic'" class="form-group">
+      <div *ngIf="aiProvider === 'openai' || aiProvider === 'anthropic'" class="form-group">
         <label for="apiKey">API Key:</label>
         <input
           type="password"
@@ -95,6 +97,32 @@
           class="form-control"
           placeholder="Enter your API key">
         <small class="help-text">Your API key is stored locally and never sent to our servers.</small>
+      </div>
+
+      <div *ngIf="aiProvider === 'ollama' || aiProvider === 'llamacpp'" class="form-group">
+        <label for="endpoint">Server Endpoint:</label>
+        <input
+          type="text"
+          id="endpoint"
+          [(ngModel)]="endpoint"
+          class="form-control"
+          [placeholder]="aiProvider === 'ollama' ? 'http://localhost:11434' : 'http://localhost:8080'">
+        <small class="help-text">
+          Default: {{ aiProvider === 'ollama' ? 'http://localhost:11434' : 'http://localhost:8080' }}
+        </small>
+      </div>
+
+      <div *ngIf="aiProvider === 'ollama' || aiProvider === 'llamacpp'" class="form-group">
+        <label for="modelName">Model Name:</label>
+        <input
+          type="text"
+          id="modelName"
+          [(ngModel)]="modelName"
+          class="form-control"
+          [placeholder]="aiProvider === 'ollama' ? 'llama3.2' : 'default'">
+        <small class="help-text">
+          {{ aiProvider === 'ollama' ? 'Examples: llama3.2, mistral, phi3' : 'Leave empty for default model' }}
+        </small>
       </div>
 
       <div class="settings-actions">

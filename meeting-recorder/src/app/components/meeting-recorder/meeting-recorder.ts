@@ -38,8 +38,10 @@ export class MeetingRecorder implements OnInit, OnDestroy {
 
   // Settings
   showSettings = false;
-  aiProvider: 'basic' | 'openai' | 'anthropic' = 'basic';
+  aiProvider: 'basic' | 'openai' | 'anthropic' | 'ollama' | 'llamacpp' = 'basic';
   apiKey = '';
+  endpoint = '';
+  modelName = '';
 
   // UI state
   activeTab: 'transcript' | 'summary' = 'transcript';
@@ -283,7 +285,9 @@ export class MeetingRecorder implements OnInit, OnDestroy {
   saveSettings(): void {
     const config: SummaryConfig = {
       provider: this.aiProvider,
-      apiKey: this.apiKey || undefined
+      apiKey: this.apiKey || undefined,
+      endpoint: this.endpoint || undefined,
+      model: this.modelName || undefined
     };
     this.summaryService.setConfig(config);
     this.showSettings = false;
