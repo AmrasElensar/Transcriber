@@ -1,0 +1,221 @@
+<div class="meeting-recorder">
+  <div class="container">
+    <header class="header">
+      <h1>Meeting Recorder & Transcriber</h1>
+      <p class="subtitle">Record meetings and generate AI-powered summaries</p>
+    </header>
+
+    <!-- Browser Support Warning -->
+    <div *ngIf="!speechRecognitionSupported" class="alert alert-warning">
+      <strong>Speech Recognition Not Supported</strong><br>
+      Please use Google Chrome or Microsoft Edge for the best experience.
+    </div>
+
+    <!-- Error Messages -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Recording Controls -->
+    <div class="controls-section">
+      <div class="status-bar">
+        <div class="status-indicator" [class.recording]="isRecording" [class.paused]="isPaused">
+          <span class="status-dot"></span>
+          <span class="status-text">
+            {{ isRecording ? 'Recording' : isPaused ? 'Paused' : 'Ready' }}
+          </span>
+        </div>
+        <div class="timer">{{ formattedDuration }}</div>
+        <button class="btn btn-icon" (click)="toggleSettings()" title="Settings">
+          ⚙️
+        </button>
+      </div>
+
+      <div class="control-buttons">
+        <button
+          *ngIf="!isRecording && !isPaused"
+          class="btn btn-primary btn-large"
+          (click)="startRecording()"
+          [disabled]="!speechRecognitionSupported">
+          <span class="btn-icon">🎙️</span>
+          Start Recording
+        </button>
+
+        <button
+          *ngIf="isRecording"
+          class="btn btn-warning btn-large"
+          (click)="pauseRecording()">
+          <span class="btn-icon">⏸️</span>
+          Pause
+        </button>
+
+        <button
+          *ngIf="isPaused"
+          class="btn btn-success btn-large"
+          (click)="resumeRecording()">
+          <span class="btn-icon">▶️</span>
+          Resume
+        </button>
+
+        <button
+          *ngIf="isRecording || isPaused"
+          class="btn btn-danger btn-large"
+          (click)="stopRecording()">
+          <span class="btn-icon">⏹️</span>
+          Stop
+        </button>
+
+        <button
+          *ngIf="!isRecording && transcript.length > 0"
+          class="btn btn-secondary"
+          (click)="clearAll()">
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div *ngIf="showSettings" class="settings-panel">
+      <h3>AI Summary Settings</h3>
+      <div class="form-group">
+        <label for="aiProvider">AI Provider:</label>
+        <select id="aiProvider" [(ngModel)]="aiProvider" class="form-control">
+          <option value="basic">Basic (No API Required)</option>
+          <option value="openai">OpenAI GPT</option>
+          <option value="anthropic">Anthropic Claude</option>
+        </select>
+      </div>
+
+      <div *ngIf="aiProvider !== 'basic'" class="form-group">
+        <label for="apiKey">API Key:</label>
+        <input
+          type="password"
+          id="apiKey"
+          [(ngModel)]="apiKey"
+          class="form-control"
+          placeholder="Enter your API key">
+        <small class="help-text">Your API key is stored locally and never sent to our servers.</small>
+      </div>
+
+      <div class="settings-actions">
+        <button class="btn btn-primary" (click)="saveSettings()">Save Settings</button>
+        <button class="btn btn-secondary" (click)="toggleSettings()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" *ngIf="transcript.length > 0">
+      <button
+        class="tab"
+        [class.active]="activeTab === 'transcript'"
+        (click)="activeTab = 'transcript'">
+        📝 Transcript
+      </button>
+      <button
+        class="tab"
+        [class.active]="activeTab === 'summary'"
+        (click)="activeTab = 'summary'">
+        📊 Summary
+        <span *ngIf="summary" class="badge">✓</span>
+      </button>
+    </div>
+
+    <!-- Transcript Tab -->
+    <div *ngIf="activeTab === 'transcript' && transcript.length > 0" class="content-section">
+      <div class="section-header">
+        <h2>Transcript</h2>
+        <div class="actions">
+          <button
+            class="btn btn-primary"
+            (click)="generateSummary()"
+            [disabled]="!canGenerateSummary">
+            <span *ngIf="!isSummaryLoading">Generate Summary</span>
+            <span *ngIf="isSummaryLoading">Generating...</span>
+          </button>
+          <button class="btn btn-secondary" (click)="downloadTranscript()">
+            Download
+          </button>
+        </div>
+      </div>
+
+      <div class="transcript-box">
+        <p class="transcript-text">{{ transcript || 'Transcript will appear here...' }}</p>
+      </div>
+
+      <div class="transcript-stats">
+        <span>Words: {{ transcript.split(' ').length }}</span>
+        <span>Characters: {{ transcript.length }}</span>
+      </div>
+    </div>
+
+    <!-- Summary Tab -->
+    <div *ngIf="activeTab === 'summary'" class="content-section">
+      <div class="section-header">
+        <h2>Meeting Summary</h2>
+        <div class="actions" *ngIf="summary">
+          <button class="btn btn-primary" (click)="downloadSummary()">
+            Download Summary
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isSummaryLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Generating summary...</p>
+      </div>
+
+      <div *ngIf="!summary && !isSummaryLoading" class="empty-state">
+        <p>No summary generated yet.</p>
+        <button
+          class="btn btn-primary"
+          (click)="generateSummary()"
+          [disabled]="!canGenerateSummary">
+          Generate Summary
+        </button>
+      </div>
+
+      <div *ngIf="summary && !isSummaryLoading" class="summary-content">
+        <div *ngIf="summary.duration" class="summary-section">
+          <h3>Duration</h3>
+          <p>{{ summary.duration }}</p>
+        </div>
+
+        <div class="summary-section">
+          <h3>🎯 Key Points</h3>
+          <ul>
+            <li *ngFor="let point of summary.keyPoints">{{ point }}</li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <h3>✅ Action Items</h3>
+          <ul>
+            <li *ngFor="let item of summary.actionItems">{{ item }}</li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <h3>🎲 Decisions</h3>
+          <ul>
+            <li *ngFor="let decision of summary.decisions">{{ decision }}</li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <h3>📄 Full Summary</h3>
+          <p class="full-summary">{{ summary.fullSummary }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="transcript.length === 0" class="empty-state-main">
+      <div class="empty-icon">🎙️</div>
+      <h2>Ready to Record</h2>
+      <p>Click "Start Recording" to begin capturing your meeting.</p>
+      <p class="help-text">
+        Make sure to allow microphone access when prompted.
+      </p>
+    </div>
+  </div>
+</div>
