@@ -31,6 +31,21 @@
         </button>
       </div>
 
+      <!-- Audio Source Selection -->
+      <div *ngIf="!isRecording && !isPaused" class="audio-source-section">
+        <label for="audioSource" class="audio-source-label">Audio Source:</label>
+        <select id="audioSource" [(ngModel)]="audioSource" class="audio-source-select">
+          <option value="microphone">Microphone Only</option>
+          <option value="system">System Audio Only (Tab/Window)</option>
+          <option value="both">Both (Microphone + System Audio)</option>
+        </select>
+        <small class="help-text audio-source-help">
+          {{ audioSource === 'microphone' ? 'Records only your microphone input' :
+             audioSource === 'system' ? 'Records system/application audio (e.g., Teams, Zoom)' :
+             'Records both your voice and system audio (best for Teams meetings)' }}
+        </small>
+      </div>
+
       <div class="control-buttons">
         <button
           *ngIf="!isRecording && !isPaused"

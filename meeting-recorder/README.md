@@ -5,6 +5,9 @@ A powerful Angular application that records meetings in real-time, provides live
 ## Features
 
 - **Real-time Audio Recording**: High-quality audio recording with MediaRecorder API
+  - **Multiple Audio Sources**: Record from microphone, system audio, or both
+  - **Teams/Zoom Meeting Support**: Capture all meeting participants
+  - **System Audio Capture**: Record any application audio (browser tabs, desktop apps)
 - **Live Transcription**: Real-time speech-to-text conversion using Web Speech API
 - **AI-Powered Summaries**: Generate structured meeting summaries with:
   - Key Points
@@ -59,12 +62,40 @@ npm start
 
 ## Usage
 
-### Recording a Meeting
+### Selecting Audio Source
 
-1. Click the **"Start Recording"** button
-2. Allow microphone access when prompted
-3. Speak clearly into your microphone
-4. The transcription will appear in real-time
+Before starting a recording, select your preferred audio source:
+
+- **Microphone Only**: Records only your microphone input (default)
+  - Best for: Solo recordings, voice memos
+- **System Audio Only**: Records audio from your browser tab or application
+  - Best for: Recording presentations, webinars you're attending
+- **Both (Microphone + System Audio)**: Records both your microphone and system audio
+  - Best for: Teams meetings, Zoom calls, any meeting where you need both sides
+
+### Recording a Regular Meeting
+
+1. Select **"Microphone Only"** as the audio source
+2. Click the **"Start Recording"** button
+3. Allow microphone access when prompted
+4. Speak clearly into your microphone
+5. The transcription will appear in real-time
+
+### Recording Teams/Zoom Meetings
+
+1. Select **"Both (Microphone + System Audio)"** as the audio source
+2. Click the **"Start Recording"** button
+3. Allow microphone access when prompted
+4. When prompted to share screen:
+   - Select the **browser tab** running your Teams/Zoom meeting
+   - **Important**: Check the box for **"Share tab audio"** or **"Share system audio"**
+   - Click **"Share"**
+5. All meeting participants will now be recorded along with your voice
+6. The transcription will capture all audio in real-time
+
+**Note**: For Teams/Zoom meetings in the desktop app, you may need to:
+- Open Teams/Zoom in your browser instead, OR
+- Select "System Audio Only" and have your microphone directly in the meeting
 
 ### Controlling the Recording
 
@@ -249,6 +280,8 @@ ng generate service service-name
 - **SCSS**: Styling
 - **RxJS**: Reactive programming
 - **MediaRecorder API**: Audio recording
+- **Web Audio API**: Audio stream mixing and processing
+- **getDisplayMedia API**: System audio capture
 - **Web Speech API**: Speech recognition
 - **Ollama**: Local LLM inference (optional)
 - **llama.cpp**: Local LLM inference (optional)
@@ -301,6 +334,32 @@ ng generate service service-name
 2. Ensure you started the server with the correct model path
 3. Check that the port isn't blocked by a firewall
 4. Start server with CORS enabled if needed: `./server -m model.gguf --host 0.0.0.0 --port 8080`
+
+### System Audio Not Recording (Teams/Zoom)
+
+1. **Make sure you're using Chrome or Edge** - Firefox has limited system audio support
+2. **Check "Share tab audio" when prompted**:
+   - When the screen sharing dialog appears, look for "Share tab audio" checkbox
+   - On some systems it may say "Share system audio" or "Share audio"
+   - This checkbox is easy to miss - look carefully at the bottom of the dialog
+3. **For Teams/Zoom meetings**:
+   - Use the browser version (web.teams.microsoft.com or zoom.us/join)
+   - Desktop apps require additional setup
+4. **If no audio is captured**:
+   - Stop the recording
+   - Select "Both (Microphone + System Audio)" again
+   - Make sure to check the audio sharing checkbox this time
+5. **Test your setup**:
+   - Try recording a YouTube video first to verify system audio works
+   - If YouTube works but Teams doesn't, the issue is with Teams audio permissions
+
+### No Audio in Recording
+
+1. Check that audio is playing from the source (Teams/Zoom)
+2. Verify system volume is not muted
+3. Try closing and reopening the browser
+4. Check browser's site permissions for microphone and screen sharing
+5. Try selecting a different audio source option
 
 ## Known Limitations
 

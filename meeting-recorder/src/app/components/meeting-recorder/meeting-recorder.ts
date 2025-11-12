@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
-import { AudioRecorder } from '../../services/audio-recorder';
+import { AudioRecorder, AudioSourceType } from '../../services/audio-recorder';
 import { Transcription, TranscriptSegment } from '../../services/transcription';
 import { Summary, MeetingSummary, SummaryConfig } from '../../services/summary';
 
@@ -42,6 +42,9 @@ export class MeetingRecorder implements OnInit, OnDestroy {
   apiKey = '';
   endpoint = '';
   modelName = '';
+
+  // Audio source
+  audioSource: AudioSourceType = 'microphone';
 
   // UI state
   activeTab: 'transcript' | 'summary' = 'transcript';
@@ -141,7 +144,7 @@ export class MeetingRecorder implements OnInit, OnDestroy {
 
   async startRecording(): Promise<void> {
     try {
-      await this.audioRecorder.startRecording();
+      await this.audioRecorder.startRecording(this.audioSource);
       this.transcriptionService.startTranscription();
       this.transcriptSegments = [];
       this.summary = null;
